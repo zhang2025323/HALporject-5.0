@@ -425,6 +425,19 @@ class BatchProcessor:
                         new_size = (int(image.width * ratio), int(image.height * ratio))
                         image = image.resize(new_size, Image.LANCZOS)
 
+                # 🎯 关键优化：JPEG压缩标准化数据分布
+                # 解决"训练数据能检测，实际手机拍摄检测不出"的问题
+                # 原理：去除高频噪声，使图片更接近训练数据分布
+                try:
+                    import io as _io
+                    _compress_buffer = _io.BytesIO()
+                    image.save(_compress_buffer, format='JPEG', quality=87, optimize=True)
+                    _compressed_bytes = _compress_buffer.getvalue()
+                    image = Image.open(_io.BytesIO(_compressed_bytes)).convert('RGB')
+                    del _compress_buffer, _compressed_bytes
+                except Exception as _compress_err:
+                    print(f"   ⚠️ JPEG压缩失败（使用原图）: {_compress_err}")
+
                 # 执行检测 - 直接传PIL对象，不转numpy（避免转换问题）
                 start_time = time.time()
                 combined_img, info = self.detector.detect_both(image)
