@@ -1330,17 +1330,18 @@ if all_uploaded_files:
         with col_clear2:
             if st.button(f"🗑️ 一键清除全部结果 ({total_images}张)", key="clear_all_btn", use_container_width=True,
                         help="点击后将立即清除所有检测结果和上传的文件"):
-                # 直接清除所有检测数据
+
+                # 🎯 第一层：清除所有检测数据
                 st.session_state.detection_records = []
                 st.session_state.detection_cache = {}
                 st.session_state.deleted_files = set()
-                st.session_state.auto_uploaded_files = set()  # 清除自动上传记录（允许重新上传）
-                st.session_state.just_cleared = True  # 标记：刚执行了清除
+                st.session_state.auto_uploaded_files = set()
 
-                # 🔑 关键：增加版本号，强制重新创建 file_uploader 组件
-                # 这样 Streamlit 会认为这是新组件，从而清除文件列表
+                # 🎯 第二层：强制重置文件上传器
+                st.session_state.just_cleared = True
                 st.session_state.uploader_key_version += 1
 
+                # 🎯 第三层：清除所有可能的文件缓存状态
                 if "bottom_new_files" in st.session_state:
                     del st.session_state.bottom_new_files
                 if "pending_uploads" in st.session_state:
@@ -1348,8 +1349,36 @@ if all_uploaded_files:
                 if "all_uploaded_files_persistent" in st.session_state:
                     st.session_state.all_uploaded_files_persistent = []
 
+                # 🆕 新增：标记需要强制刷新上传器（用于JavaScript端清除）
+                st.session_state.force_clear_uploader = True
+
                 st.success("✅ 已清除所有检测结果和上传文件")
                 st.rerun()
+
+        # 🆕 新增：如果标记了强制清除，注入JavaScript清除浏览器端的文件输入框
+        if st.session_state.get("force_clear_uploader", False):
+            st.markdown("""
+            <script>
+            (function() {
+                // 清除所有文件输入框的值
+                const inputs = document.querySelectorAll('input[type="file"]');
+                inputs.forEach(function(input) {
+                    input.value = '';
+                });
+
+                // 尝试触发Streamlit内部的文件列表更新
+                const event = new Event('change', { bubbles: true });
+                inputs.forEach(function(input) {
+                    input.dispatchEvent(event);
+                });
+
+                console.log('[CLEAR] 已强制清除所有文件上传器');
+            })();
+            </script>
+            """, unsafe_allow_html=True)
+
+            # 重置标志（只执行一次）
+            st.session_state.force_clear_uploader = False
 
         st.markdown("---")
 
