@@ -1237,8 +1237,8 @@ if all_uploaded_files:
             st.session_state.detection_records.append(result['record'])
             print(f"   ✓ 已添加: {file_key}")
 
-            # 🔄 自动上传：检测完成后立即发送到MES（确保质检完成后再发送）
-            if st.session_state.auto_upload_enabled and file_key not in st.session_state.auto_uploaded_files:
+            # 🔄 自动上传：检测完成后立即发送到MES（每次检测都发送，确保数据不丢失）
+            if st.session_state.auto_upload_enabled:
                 # 压缩原始工件图片
                 image_base64 = ""
                 print(f"   📷 检查缓存: file_key='{file_key}', 在缓存中={file_key in st.session_state.detection_cache}")
