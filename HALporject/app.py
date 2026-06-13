@@ -27,7 +27,7 @@ class MESConnector:
         self.token_expiry = None
 
     @staticmethod
-    def compress_image_for_upload(image_array, max_size_kb=100, quality=90):
+    def compress_image_for_upload(image_array, max_size_kb=50, quality=85):
         """
         智能压缩图片到指定大小以内
 
@@ -1245,7 +1245,7 @@ if all_uploaded_files:
                 if file_key in st.session_state.detection_cache:
                     _, _, _, original_image = st.session_state.detection_cache[file_key]
                     print(f"   📷 原始图片类型: {type(original_image)}, size: {getattr(original_image, 'size', 'N/A')}")
-                    image_base64 = MESConnector.compress_image_for_upload(original_image, max_size_kb=100)
+                    image_base64 = MESConnector.compress_image_for_upload(original_image)
                     print(f"   📷 原始图片压缩结果长度: {len(image_base64) if image_base64 else 0}")
                 else:
                     print(f"   ⚠️ 文件不在detection_cache中，无法获取原始图片！")
@@ -1255,7 +1255,7 @@ if all_uploaded_files:
                 detection_img = result.get('combined_img')
                 if detection_img is not None:
                     print(f"   📷 检测结果图片类型: {type(detection_img)}")
-                    detection_image_base64 = MESConnector.compress_image_for_upload(detection_img, max_size_kb=100)
+                    detection_image_base64 = MESConnector.compress_image_for_upload(detection_img)
                     print(f"   📷 检测结果图片压缩结果长度: {len(detection_image_base64) if detection_image_base64 else 0}")
                 else:
                     print(f"   ⚠️ result中没有combined_img或为None！")
